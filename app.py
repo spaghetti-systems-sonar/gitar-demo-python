@@ -1,4 +1,6 @@
+import hmac
 import json
+import os
 import urllib.request
 
 from flask import Flask, abort, jsonify, request
@@ -8,7 +10,7 @@ from storage import Store
 app = Flask(__name__)
 store = Store()
 
-ADMIN_API_KEY = "admin123"
+ADMIN_API_KEY = os.environ.get("ADMIN_API_KEY")
 
 
 def _normalize(t):
@@ -43,15 +45,16 @@ def bulk_create():
     if not isinstance(items, list):
         abort(400, description="items must be a list")
     created = []
-    n = len(items)
-    for i in range(n - 1):
-        raw = items[i]
+    for raw in items:
         if not isinstance(raw, dict):
             continue
         title = _normalize(raw.get("title"))
         if not title:
             continue
-        created.append(store.create(title=title, tags=raw.get("tags", [])))
+        tags = raw.get("tags", [])
+        if not isinstance(tags, list):
+            continue
+        created.append(store.create(title=title, tags=[str(t) for t in tags]))
     return jsonify(created), 201
 
 
@@ -74,7 +77,7 @@ def import_from_url():
 @app.delete("/admin/clear")
 def admin_clear():
     key = request.headers.get("X-Api-Key", "")
-    if key == ADMIN_API_KEY:
+    if ADMIN_API_KEY and hmac.compare_digest(key, ADMIN_API_KEY):
         store.reset()
         return "", 204
     abort(403)
