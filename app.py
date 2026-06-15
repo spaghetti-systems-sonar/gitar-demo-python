@@ -21,7 +21,7 @@ def create_item():
     if not isinstance(tags, list):
         abort(400, description="tags must be a list of strings")
     item = store.create(title=title.strip(), tags=[str(t) for t in tags])
-    return jsonify(item), 201
+    return jsonify({"data": item}), 201
 
 
 @app.get("/items/<int:item_id>")
