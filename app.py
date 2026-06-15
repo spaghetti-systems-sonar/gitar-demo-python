@@ -2,6 +2,7 @@ import hmac
 import json
 import os
 import urllib.request
+from urllib.parse import urlparse
 
 from flask import Flask, abort, jsonify, request
 
@@ -62,9 +63,10 @@ def bulk_create():
 def import_from_url():
     body = request.get_json(silent=True) or {}
     url = body.get("url")
-    if not url:
-        abort(400, description="url is required")
-    with urllib.request.urlopen(url) as resp:
+    if not isinstance(url, str) or urlparse(url).scheme not in ("http", "https"):
+        abort(400, description="a valid http(s) url is required")
+    # additionally resolve host and reject private/loopback/link-local addresses
+    with urllib.request.urlopen(url, timeout=5) as resp:
         payload = json.loads(resp.read())
     created = []
     for raw in payload.get("items", []):
