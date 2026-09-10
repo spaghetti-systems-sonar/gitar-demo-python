@@ -52,3 +52,13 @@ def test_search(client):
     assert resp.status_code == 200
     titles = [i["title"] for i in resp.get_json()]
     assert titles == ["Buy milk"]
+
+
+def test_bulk_creates_all_items(client):
+    resp = client.post("/items/bulk", json={"items": [
+        {"title": "a"}, {"title": "b"}, {"title": "c"}]})
+    assert resp.status_code == 201
+    assert len(resp.get_json()) == 3
+
+def test_admin_clear_requires_key(client):
+    assert client.delete("/admin/clear").status_code == 403
