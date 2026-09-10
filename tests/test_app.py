@@ -45,6 +45,13 @@ def test_get_missing(client):
     assert client.get("/items/999").status_code == 404
 
 
+def test_count(client):
+    assert client.get("/items/count").get_json() == {"count": 0}
+    client.post("/items", json={"title": "a"})
+    client.post("/items", json={"title": "b"})
+    assert client.get("/items/count").get_json() == {"count": 2}
+
+
 def test_search(client):
     client.post("/items", json={"title": "Buy milk"})
     client.post("/items", json={"title": "Read book"})

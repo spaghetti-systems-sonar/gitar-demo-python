@@ -11,6 +11,11 @@ def list_items():
     return jsonify(store.all())
 
 
+@app.get("/items/count")
+def count_items():
+    return jsonify({"count": len(store.all())})
+
+
 @app.post("/items")
 def create_item():
     body = request.get_json(silent=True) or {}
